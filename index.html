@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>প্রাথমিক বিদ্যালয় প্রত্যয়নপত্র জেনারেটর</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- SolaimanLipi Font CDN -->
+    <link href="https://fonts.maateen.me/solaiman-lipi/font.css" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'SolaimanLipi', Arial, sans-serif !important;
+            background: linear-gradient(135deg, #e0e7ff 0%, #f1f5f9 100%);
+        }
+
+        /* Glassmorphism Sidebar Container */
+        .glass-sidebar {
+            background: rgba(255, 255, 255, 0.65);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-right: 1px solid rgba(255, 255, 255, 0.4);
+        }
+
+        /* Neumorphic Input Styling */
+        .neu-input {
+            background: #f8fafc;
+            box-shadow: inset 2px 2px 5px #d1d5db, inset -2px -2px 5px #ffffff;
+            border: 1px solid rgba(226, 232, 240, 0.8);
+            transition: all 0.2s ease-in-out;
+        }
+        .neu-input:focus {
+            outline: none;
+            background: #ffffff;
+            box-shadow: inset 1px 1px 3px #9ca3af, inset -1px -1px 3px #ffffff, 0 0 0 2px #059669;
+        }
+
+        /* Neumorphic Tab Buttons */
+        .neu-tab-btn {
+            background: #f1f5f9;
+            box-shadow: 4px 4px 8px #cbd5e1, -4px -4px 8px #ffffff;
+            transition: all 0.2s ease;
+        }
+        .neu-tab-btn.active {
+            background: #059669;
+            color: white;
+            box-shadow: inset 3px 3px 6px #047857, inset -3px -3px 6px #10b981;
+        }
+
+        /* Action Buttons Neumorphism */
+        .neu-btn-action {
+            background: linear-gradient(145deg, #10b981, #047857);
+            box-shadow: 4px 4px 10px #cbd5e1, -4px -4px 10px #ffffff;
+        }
+        .neu-btn-action:active {
+            box-shadow: inset 3px 3px 6px #047857, inset -3px -3px 6px #10b981;
+        }
+
+        .neu-btn-sub {
+            background: #f8fafc;
+            box-shadow: 3px 3px 6px #cbd5e1, -3px -3px 6px #ffffff;
+        }
+        .neu-btn-sub:active {
+            box-shadow: inset 2px 2px 4px #cbd5e1, inset -2px -2px 4px #ffffff;
+        }
+
+        /* A4 Page Layout styling */
+        .a4-page {
+            width: 210mm;
+            min-height: 297mm;
+            padding: 20mm;
+            margin: 0 auto;
+            background: #ffffff;
+            box-shadow: 0 20px 30px rgba(0, 0, 0, 0.08);
+            position: relative;
+            box-sizing: border-box;
+            color: #0f172a;
+            overflow: hidden;
+        }
+
+        /* Certificate Border */
+        .certificate-border {
+            border: 3px double #15803d;
+            padding: 25px 22px;
+            height: calc(100% - 10px);
+            position: relative;
+            background: transparent;
+            z-index: 10;
+        }
+        .certificate-border::before {
+            content: '';
+            position: absolute;
+            top: 4px; left: 4px; right: 4px; bottom: 4px;
+            border: 1px solid #166534;
+            pointer-events: none;
+        }
+
+        /* Watermark styling */
+        .watermark {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 360px;
+            opacity: 0.08;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        /* Highlight editable fields */
+        [contenteditable="true"]:hover {
+            outline: 1px dashed #3b82f6;
+            background-color: #eff6ff;
+            border-radius: 2px;
+        }
+        [contenteditable="true"]:focus {
+            outline: 2px solid #2563eb;
+            background-color: #ffffff;
+            border-radius: 2px;
+        }
+
+        /* PRINT MEDIA QUERIES */
+        @media print {
+            @page {
+                size: A4 portrait;
+                margin: 0;
+            }
+            body {
+                background: white !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+            .no-print {
+                display: none !important;
+            }
+            .print-area {
+                padding: 0 !important;
+                margin: 0 !important;
+                width: 100% !important;
+                box-shadow: none !important;
+                display: block !important;
+            }
+            .a4-page {
+                width: 210mm !important;
+                height: 297mm !important;
+                padding: 15mm 15mm !important;
+                box-shadow: none !important;
+                margin: 0 !important;
+                page-break-after: avoid;
+                page-break-before: avoid;
+            }
+            .certificate-title-bg {
+                background-color: transparent !important;
+                color: #000000 !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+            [contenteditable="true"] {
+                outline: none !important;
+                background: transparent !important;
+            }
+            /* QR code print sizing */
+            .print-qr-img {
+                width: 110px !important;
+                height: 110px !important;
+            }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col md:flex-row overflow-x-hidden">
+
+    <!-- Mobile Sidebar Toggle Overlay Button -->
+    <div class="no-print fixed bottom-4 right-4 z-50 md:hidden">
+        <button id="mobileSidebarToggle" class="bg-emerald-600 hover:bg-emerald-700 text-white p-4 rounded-full shadow-lg focus:outline-none flex items-center justify-center">
+            <i class="fa-solid fa-sliders text-xl"></i>
+        </button>
+    </div>
+
+    <!-- LEFT SIDEBAR EDIT FORM PANEL -->
+    <aside id="sidebar" class="no-print w-full md:w-[420px] lg:w-[450px] glass-sidebar flex flex-col h-screen fixed md:sticky top-0 z-40 transition-transform duration-300 transform -translate-x-full md:translate-x-0 shadow-2xl">
+        
+        <!-- Sidebar Header -->
+        <div class="p-4 bg-emerald-800/90 text-white flex justify-between items-center shadow-md">
+            <div class="flex items-center space-x-2 space-x-reverse">
+                <i class="fa-solid fa-file-pen text-xl text-yellow-400 mr-2"></i>
+                <h1 class="font-bold text-lg tracking-wide">প্রত্যয়নপত্র এডিটর</h1>
+            </div>
+            <button id="closeSidebarBtn" class="md:hidden text-slate-200 hover:text-white p-1">
+                <i class="fa-solid fa-xmark text-2xl"></i>
+            </button>
+        </div>
+
+        <!-- Sidebar Body -->
+        <div class="p-4 flex flex-col h-full justify-between overflow-y-auto">
+            <div>
+                <!-- Action Controls Header Buttons -->
+                <div class="grid grid-cols-2 gap-2 mb-4">
+                    <button onclick="window.print()" class="col-span-2 neu-btn-action text-white font-semibold py-2.5 px-4 rounded-xl shadow transition flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-print"></i>
+                        <span>প্রিন্ট করুন (Print)</span>
+                    </button>
+                    <button id="btnLoadSample" class="neu-btn-sub text-blue-700 font-medium py-1.5 px-3 rounded-lg text-xs flex items-center justify-center gap-1.5 transition">
+                        <i class="fa-solid fa-rotate-left"></i>
+                        <span>স্যাম্পল ডেটা</span>
+                    </button>
+                    <button id="btnReset" class="neu-btn-sub text-slate-600 font-medium py-1.5 px-3 rounded-lg text-xs flex items-center justify-center gap-1.5 transition">
+                        <i class="fa-solid fa-trash-can"></i>
+                        <span>ফাঁকা করুন</span>
+                    </button>
+                </div>
+
+                <!-- TOP SECTION TAB NAVIGATION BUTTONS -->
+                <div class="flex gap-1.5 p-1 bg-slate-200/60 rounded-xl mb-4">
+                    <button id="tabBtn_school" onclick="switchTab('school')" class="neu-tab-btn active flex-1 py-2 rounded-lg text-xs font-bold text-slate-700 flex items-center justify-center gap-1">
+                        <i class="fa-solid fa-school"></i>
+                        <span>বিদ্যালয়</span>
+                    </button>
+                    <button id="tabBtn_student" onclick="switchTab('student')" class="neu-tab-btn flex-1 py-2 rounded-lg text-xs font-bold text-slate-700 flex items-center justify-center gap-1">
+                        <i class="fa-solid fa-user-graduate"></i>
+                        <span>শিক্ষার্থী</span>
+                    </button>
+                    <button id="tabBtn_options" onclick="switchTab('options')" class="neu-tab-btn flex-1 py-2 rounded-lg text-xs font-bold text-slate-700 flex items-center justify-center gap-1">
+                        <i class="fa-solid fa-sliders"></i>
+                        <span>অপশন</span>
+                    </button>
+                </div>
+
+                <!-- TAB 1: SCHOOL INFO -->
+                <div id="tab_school" class="space-y-3">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">বিদ্যালয়ের নাম (বাংলা):</label>
+                        <input type="text" id="in_schoolNameBn" class="w-full px-3 py-2 text-sm neu-input rounded-lg" placeholder="শিরিকান্দী সরকারি প্রাথমিক বিদ্যালয়">
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">স্থাপিত সাল:</label>
+                            <input type="text" id="in_estYear" class="w-full px-3 py-1.5 text-sm neu-input rounded-lg" placeholder="১৯৮৮">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">গ্রাম/রাস্তা:</label>
+                            <input type="text" id="in_schoolVillage" class="w-full px-3 py-1.5 text-sm neu-input rounded-lg" placeholder="শিরিকান্দী">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-3 gap-2">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">ডাকঘর:</label>
+                            <input type="text" id="in_schoolPO" class="w-full px-3 py-1.5 text-sm neu-input rounded-lg" placeholder="রামশ্রী">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">উপজেলা/থানা:</label>
+                            <input type="text" id="in_schoolUpazila" class="w-full px-3 py-1.5 text-sm neu-input rounded-lg" placeholder="চুনারুঘাট">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">জেলা:</label>
+                            <input type="text" id="in_schoolDistrict" class="w-full px-3 py-1.5 text-sm neu-input rounded-lg" placeholder="হবিগঞ্জ">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 2: STUDENT INFO -->
+                <div id="tab_student" class="space-y-2 hidden">
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">শিক্ষার্থীর নাম (বাংলা):</label>
+                            <input type="text" id="in_studentNameBn" class="w-full px-3 py-1.5 text-sm neu-input rounded-lg" placeholder="তাসনিয়া তাবাসসুম">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">শিক্ষার্থীর নাম (English):</label>
+                            <input type="text" id="in_studentNameEn" class="w-full px-3 py-1.5 text-sm neu-input rounded-lg uppercase" placeholder="TASNIYA TABASSUM">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">শিক্ষার্থীর ধরণ:</label>
+                            <select id="in_gender" class="w-full px-3 py-1.5 text-sm neu-input rounded-lg bg-white">
+                                <option value="female">ছাত্রী (Female)</option>
+                                <option value="male">ছাত্র (Male)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">শ্রেণী:</label>
+                            <input type="text" id="in_class" class="w-full px-3 py-1.5 text-sm neu-input rounded-lg" placeholder="প্রথম">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">পিতার নাম (বাংলা):</label>
+                            <input type="text" id="in_fatherNameBn" class="w-full px-3 py-1.5 text-sm neu-input rounded-lg" placeholder="মোঃ রুবেল মিয়া">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">পিতার নাম (English):</label>
+                            <input type="text" id="in_fatherNameEn" class="w-full px-3 py-1.5 text-sm neu-input rounded-lg uppercase" placeholder="MD. RUBEL MIAH">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">মাতার নাম (বাংলা):</label>
+                            <input type="text" id="in_motherNameBn" class="w-full px-3 py-1.5 text-sm neu-input rounded-lg" placeholder="নুরুন্নেছা">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">মাতার নাম (English):</label>
+                            <input type="text" id="in_motherNameEn" class="w-full px-3 py-1.5 text-sm neu-input rounded-lg uppercase" placeholder="NURUNNECA">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">গ্রাম/মহল্লা (বাংলা):</label>
+                            <input type="text" id="in_stdVillageBn" class="w-full px-3 py-1.5 text-sm neu-input rounded-lg" placeholder="শিরিকান্দী">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">গ্রাম (En):</label>
+                            <input type="text" id="in_stdVillageEn" class="w-full px-3 py-1.5 text-sm neu-input rounded-lg uppercase" placeholder="SHIRIKANDI">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">ডাকঘর (বাংলা):</label>
+                            <input type="text" id="in_stdPOBn" class="w-full px-3 py-1.5 text-sm neu-input rounded-lg" placeholder="রামশ্রী">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">ডাকঘর (En):</label>
+                            <input type="text" id="in_stdPOEn" class="w-full px-3 py-1.5 text-sm neu-input rounded-lg uppercase" placeholder="RAMSREE">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">উপজেলা/থানা (বাংলা):</label>
+                            <input type="text" id="in_stdUpazilaBn" class="w-full px-3 py-1.5 text-sm neu-input rounded-lg" placeholder="চুনারুঘাট">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">উপজেলা/থানা (En):</label>
+                            <input type="text" id="in_stdUpazilaEn" class="w-full px-3 py-1.5 text-sm neu-input rounded-lg uppercase" placeholder="CHUNARUGHAT">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">জেলা (বাংলা):</label>
+                            <input type="text" id="in_stdDistrictBn" class="w-full px-3 py-1.5 text-sm neu-input rounded-lg" placeholder="হবিগঞ্জ">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">জেলা (En):</label>
+                            <input type="text" id="in_stdDistrictEn" class="w-full px-3 py-1.5 text-sm neu-input rounded-lg uppercase" placeholder="HABIGANJ">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">জন্ম তারিখ:</label>
+                        <input type="text" id="in_dob" class="w-full px-3 py-1.5 text-sm neu-input rounded-lg" placeholder="10/10/2019">
+                    </div>
+                </div>
+
+                <!-- TAB 3: OPTIONS -->
+                <div id="tab_options" class="space-y-3 hidden">
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">স্মারক নং / রেফ:</label>
+                            <input type="text" id="in_refNo" class="w-full px-3 py-1.5 text-sm neu-input rounded-lg" placeholder="শ্বি:স:প্রা:বি/২০২৪/১২">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">তারিখ:</label>
+                            <input type="text" id="in_issueDate" class="w-full px-3 py-1.5 text-sm neu-input rounded-lg" placeholder="২২/০৯/২০২৪">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">প্রধান শিক্ষকের নাম (ঐচ্ছিক):</label>
+                        <input type="text" id="in_headmasterName" class="w-full px-3 py-1.5 text-sm neu-input rounded-lg" placeholder="">
+                    </div>
+                    <div class="space-y-3 pt-2">
+                        <label class="flex items-center space-x-2 cursor-pointer bg-white/60 p-2 rounded-lg border border-slate-200">
+                            <input type="checkbox" id="chk_watermark" checked class="rounded text-emerald-600 focus:ring-emerald-500 h-4 w-4">
+                            <span class="text-xs text-slate-800 font-bold ml-2">জলছাপ (Watermark Logo) প্রদর্শন করুন</span>
+                        </label>
+                        <label class="flex items-center space-x-2 cursor-pointer bg-white/60 p-2 rounded-lg border border-slate-200">
+                            <input type="checkbox" id="chk_logos" checked class="rounded text-emerald-600 focus:ring-emerald-500 h-4 w-4">
+                            <span class="text-xs text-slate-800 font-bold ml-2">উপরের উভয় লোগো (Logos) প্রদর্শন করুন</span>
+                        </label>
+                        <label class="flex items-center space-x-2 cursor-pointer bg-white/60 p-2 rounded-lg border border-slate-200">
+                            <input type="checkbox" id="chk_qrcode" checked class="rounded text-emerald-600 focus:ring-emerald-500 h-4 w-4">
+                            <span class="text-xs text-slate-800 font-bold ml-2">লাইভ QR কোড (QR Code) প্রদর্শন করুন</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-center text-[11px] text-slate-500 font-semibold pt-4">
+                প্রাথমিক শিক্ষা অধিদপ্তর অনুমোদিত ফরম্যাট
+            </div>
+        </div>
+    </aside>
+
+    <!-- RIGHT MAIN PREVIEW PANEL -->
+    <main class="flex-1 p-4 md:p-8 overflow-y-auto flex justify-center items-start print-area">
+        
+        <!-- A4 CERTIFICATE PAPER -->
+        <div class="a4-page relative flex flex-col justify-between select-text" id="certificatePaper">
+            
+            <!-- Background Watermark Logo -->
+            <img src="https://i.ibb.co.com/ksMMVT1f/sorkar.png" alt="Govt Watermark" class="watermark" id="watermarkLogo">
+
+            <!-- Inner Decorative Border Envelope -->
+            <div class="certificate-border flex flex-col justify-between h-full">
+
+                <!-- HEADER SECTION -->
+                <div>
+                    <div class="flex justify-between items-center mb-2">
+                        <!-- Left Govt Logo -->
+                        <div class="w-24 text-left">
+                            <img src="https://i.ibb.co.com/ksMMVT1f/sorkar.png" alt="BD Govt Logo" class="h-24 w-24 object-contain inline-block logo-img" id="govtLogo">
+                        </div>
+
+                        <!-- Center School Name and Dept Header -->
+                        <div class="text-center flex-1 px-2 z-20">
+                            <h3 class="text-base md:text-lg font-bold text-slate-800 leading-snug" contenteditable="true">গণপ্রজাতন্ত্রী বাংলাদেশ সরকার</h3>
+                            <h4 class="text-sm md:text-base font-bold text-emerald-900 leading-snug" contenteditable="true">প্রাথমিক শিক্ষা অধিদপ্তর</h4>
+                            <h1 class="text-2xl md:text-3xl font-extrabold text-emerald-800 my-1 tracking-normal" id="out_schoolNameBn" contenteditable="true">শিরিকান্দী সরকারি প্রাথমিক বিদ্যালয়</h1>
+                            <p class="text-xs md:text-sm text-slate-700 font-medium leading-tight">
+                                স্থাপিত: <span id="out_estYear" contenteditable="true">১৯৮৮</span> খ্রি. 
+                                | গ্রাম: <span id="out_schoolVillage" contenteditable="true">শিরিকান্দী</span>, 
+                                ডাকঘর: <span id="out_schoolPO" contenteditable="true">রামশ্রী</span>
+                            </p>
+                            <p class="text-xs md:text-sm text-slate-700 font-medium leading-tight">
+                                উপজেলা: <span id="out_schoolUpazila" contenteditable="true">চুনারুঘাট</span>, 
+                                জেলা: <span id="out_schoolDistrict" contenteditable="true">হবিগঞ্জ</span>
+                            </p>
+                        </div>
+
+                        <!-- Right Primary Education Logo -->
+                        <div class="w-24 text-right">
+                            <img src="https://i.ibb.co.com/8g4pjf4f/pratomik.png" alt="DPE Logo" class="h-24 w-24 object-contain inline-block logo-img" id="dpeLogo">
+                        </div>
+                    </div>
+
+                    <!-- Divider Line -->
+                    <div class="w-full h-0.5 bg-emerald-700 mb-6 mt-1 z-20 relative"></div>
+
+                    <!-- Certificate Title (Black Text, No BG) -->
+                    <div class="text-center my-6 z-20 relative">
+                        <span class="certificate-title-bg inline-block text-black font-bold text-2xl md:text-3xl tracking-wider" contenteditable="true">
+                            প্রত্যয়নপত্র
+                        </span>
+                    </div>
+
+                    <!-- Ref / Memo No & Date Header Row -->
+                    <div class="flex justify-between items-center text-xs md:text-sm text-slate-800 font-semibold mb-6 px-2 z-20 relative">
+                        <div>
+                            স্মারক নং: <span id="out_refNo" class="font-normal" contenteditable="true">শ্বি:স:প্রা:বি/২০২৪/১২</span>
+                        </div>
+                        <div>
+                            তারিখ: <span id="out_issueDate" class="font-normal" contenteditable="true">২২/০৯/২০২৪</span>
+                        </div>
+                    </div>
+
+                    <!-- MAIN CERTIFICATE PARAGRAPH CONTENT -->
+                    <div class="text-base md:text-[1.15rem] text-slate-900 leading-loose text-justify px-2 space-y-4 z-20 relative" id="certificateParagraph" contenteditable="true">
+                        <p>
+                            এই মর্মে প্রত্যয়ন করা যাচ্ছে যে, 
+                            <strong class="font-bold text-slate-950" id="out_studentNameBn">তাসনিয়া তাবাসসুম</strong> 
+                            (<strong class="font-bold uppercase text-slate-950" id="out_studentNameEn">TASNIYA TABASSUM</strong>), 
+                            পিতা: <strong id="out_fatherNameBn">মোঃ রুবেল মিয়া</strong> 
+                            (<strong class="uppercase" id="out_fatherNameEn">MD. RUBEL MIAH</strong>), 
+                            মাতা: <strong id="out_motherNameBn">নুরুন্নেছা</strong> 
+                            (<strong class="uppercase" id="out_motherNameEn">NURUNNECA</strong>), 
+                            গ্রাম/মহল্লা: <strong id="out_stdVillageBn">শিরিকান্দী</strong> 
+                            (<strong class="uppercase" id="out_stdVillageEn">SHIRIKANDI</strong>), 
+                            ডাকঘর: <strong id="out_stdPOBn">রামশ্রী</strong> 
+                            (<strong class="uppercase" id="out_stdPOEn">RAMSREE</strong>), 
+                            থানা: <strong id="out_stdUpazilaBn">চুনারুঘাট</strong> 
+                            (<strong class="uppercase" id="out_stdUpazilaEn">CHUNARUGHAT</strong>), 
+                            উপজেলা: <strong id="out_stdUpazilaBn2">চুনারুঘাট</strong> 
+                            (<strong class="uppercase" id="out_stdUpazilaEn2">CHUNARUGHAT</strong>), 
+                            জেলা: <strong id="out_stdDistrictBn">হবিগঞ্জ</strong> 
+                            (<strong class="uppercase" id="out_stdDistrictEn">HABIGANJ</strong>), 
+                            সে অত্র <span id="out_schoolNameBnText">শিরিকান্দী সরকারি প্রাথমিক বিদ্যালয়</span>-এর 
+                            <strong id="out_class">প্রথম</strong> শ্রেণীর একজন নিয়মিত <span id="out_genderStudent">ছাত্রী</span>। 
+                            ভর্তি বহি তথ্য অনুসারে তাহার জন্ম তারিখ: 
+                            <strong id="out_dob">10/10/2019</strong>।
+                        </p>
+                        <p class="mt-4">
+                            আমি <span id="out_pronoun">তাহার</span> উজ্জ্বল ভবিষ্যৎ এবং সার্বিক সাফল্য কামনা করছি।
+                        </p>
+                    </div>
+                </div>
+
+                <!-- SIGNATURE & FOOTER SECTION WITH ENLARGED QR CODE -->
+                <div class="mt-16 pt-6 px-2 flex justify-between items-end z-20 relative">
+                    <!-- Live Enlarged QR Code Section -->
+                    <div class="text-left flex flex-col items-center" id="qrContainer">
+                        <div class="p-1.5 border border-slate-300 rounded bg-white shadow-sm">
+                            <img id="qrCodeImg" src="" alt="QR Verification" class="w-28 h-28 object-contain print-qr-img">
+                        </div>
+                        <p class="text-[11px] text-slate-600 mt-1 font-semibold">ডিজিটাল সত্যতা যাচাই</p>
+                    </div>
+
+                    <!-- Headmaster Seal & Signature Box -->
+                    <div class="text-center w-64">
+                        <div class="border-b border-dashed border-slate-800 mb-2 w-48 mx-auto"></div>
+                        <p class="font-bold text-sm md:text-base text-slate-900" id="out_headmasterName" contenteditable="true"></p>
+                        <p class="font-bold text-sm md:text-base text-slate-900" contenteditable="true">প্রধান শিক্ষক</p>
+                        <p class="text-xs md:text-sm text-slate-700" id="out_schoolNameBnSign" contenteditable="true">শিরিকান্দী সরকারি প্রাথমিক বিদ্যালয়</p>
+                        <p class="text-xs text-slate-600" id="out_schoolUpazilaDistSign" contenteditable="true">চুনারুঘাট, হবিগঞ্জ।</p>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Tab Switcher Function
+        function switchTab(tabName) {
+            ['school', 'student', 'options'].forEach(tab => {
+                document.getElementById(`tab_${tab}`).classList.add('hidden');
+                document.getElementById(`tabBtn_${tab}`).classList.remove('active');
+            });
+            document.getElementById(`tab_${tabName}`).classList.remove('hidden');
+            document.getElementById(`tabBtn_${tabName}`).classList.add('active');
+        }
+
+        // Sample Data Initialization
+        const sampleData = {
+            schoolNameBn: "শিরিকান্দী সরকারি প্রাথমিক বিদ্যালয়",
+            estYear: "১৯৮৮",
+            schoolVillage: "শিরিকান্দী",
+            schoolPO: "রামশ্রী",
+            schoolUpazila: "চুনারুঘাট",
+            schoolDistrict: "হবিগঞ্জ",
+            
+            studentNameBn: "তাসনিয়া তাবাসসুম",
+            studentNameEn: "TASNIYA TABASSUM",
+            gender: "female",
+            class: "প্রথম",
+            fatherNameBn: "মোঃ রুবেল মিয়া",
+            fatherNameEn: "MD. RUBEL MIAH",
+            motherNameBn: "নুরুন্নেছা",
+            motherNameEn: "NURUNNECA",
+            stdVillageBn: "শিরিকান্দী",
+            stdVillageEn: "SHIRIKANDI",
+            stdPOBn: "রামশ্রী",
+            stdPOEn: "RAMSREE",
+            stdUpazilaBn: "চুনারুঘাট",
+            stdUpazilaEn: "CHUNARUGHAT",
+            stdDistrictBn: "হবিগঞ্জ",
+            stdDistrictEn: "HABIGANJ",
+            
+            dob: "10/10/2019",
+            refNo: "শ্বি:স:প্রা:বি/২০২৪/১২",
+            issueDate: new Date().toLocaleDateString('bn-BD', { day: 'numeric', month: 'numeric', year: 'numeric' }),
+            headmasterName: ""
+        };
+
+        const fields = [
+            'schoolNameBn', 'estYear', 'schoolVillage', 'schoolPO', 'schoolUpazila', 'schoolDistrict',
+            'studentNameBn', 'studentNameEn', 'gender', 'class', 'fatherNameBn', 'fatherNameEn',
+            'motherNameBn', 'motherNameEn', 'stdVillageBn', 'stdVillageEn', 'stdPOBn', 'stdPOEn',
+            'stdUpazilaBn', 'stdUpazilaEn', 'stdDistrictBn', 'stdDistrictEn', 'dob',
+            'refNo', 'issueDate', 'headmasterName'
+        ];
+
+        function loadData(data) {
+            fields.forEach(field => {
+                const el = document.getElementById(`in_${field}`);
+                if (el) el.value = data[field] || '';
+            });
+            updateCertificate();
+        }
+
+        function updateCertificate() {
+            const val = (id) => document.getElementById(`in_${id}`)?.value || '....';
+            const valRaw = (id) => document.getElementById(`in_${id}`)?.value || '';
+
+            // School Details Binding
+            const schoolName = valRaw('schoolNameBn') || '...........................................';
+            document.getElementById('out_schoolNameBn').innerText = schoolName;
+            document.getElementById('out_schoolNameBnText').innerText = schoolName;
+            document.getElementById('out_schoolNameBnSign').innerText = schoolName;
+
+            document.getElementById('out_estYear').innerText = val('estYear');
+            document.getElementById('out_schoolVillage').innerText = val('schoolVillage');
+            document.getElementById('out_schoolPO').innerText = val('schoolPO');
+            
+            const upazila = val('schoolUpazila');
+            const district = val('schoolDistrict');
+            document.getElementById('out_schoolUpazila').innerText = upazila;
+            document.getElementById('out_schoolDistrict').innerText = district;
+            document.getElementById('out_schoolUpazilaDistSign').innerText = `${upazila}, ${district}।`;
+
+            // Student Details Binding
+            document.getElementById('out_studentNameBn').innerText = val('studentNameBn');
+            document.getElementById('out_studentNameEn').innerText = val('studentNameEn');
+            document.getElementById('out_fatherNameBn').innerText = val('fatherNameBn');
+            document.getElementById('out_fatherNameEn').innerText = val('fatherNameEn');
+            document.getElementById('out_motherNameBn').innerText = val('motherNameBn');
+            document.getElementById('out_motherNameEn').innerText = val('motherNameEn');
+
+            document.getElementById('out_stdVillageBn').innerText = val('stdVillageBn');
+            document.getElementById('out_stdVillageEn').innerText = val('stdVillageEn');
+            document.getElementById('out_stdPOBn').innerText = val('stdPOBn');
+            document.getElementById('out_stdPOEn').innerText = val('stdPOEn'); 
+            document.getElementById('out_stdUpazilaBn').innerText = val('stdUpazilaBn');
+            document.getElementById('out_stdUpazilaEn').innerText = val('stdUpazilaEn');
+            document.getElementById('out_stdUpazilaBn2').innerText = val('stdUpazilaBn');
+            document.getElementById('out_stdUpazilaEn2').innerText = val('stdUpazilaEn');
+            document.getElementById('out_stdDistrictBn').innerText = val('stdDistrictBn');
+            document.getElementById('out_stdDistrictEn').innerText = val('stdDistrictEn');
+
+            // Gender Handling
+            const gender = document.getElementById('in_gender').value;
+            document.getElementById('out_genderStudent').innerText = (gender === 'male') ? 'ছাত্র' : 'ছাত্রী';
+            
+            document.getElementById('out_class').innerText = val('class');
+            document.getElementById('out_dob').innerText = val('dob');
+
+            // Reference & Dates
+            document.getElementById('out_refNo').innerText = val('refNo');
+            document.getElementById('out_issueDate').innerText = val('issueDate');
+            document.getElementById('out_headmasterName').innerText = valRaw('headmasterName');
+
+            // Live High-Res QR Code Generator
+            generateQRCode();
+        }
+
+        function generateQRCode() {
+            const studentName = document.getElementById('in_studentNameEn').value || document.getElementById('in_studentNameBn').value;
+            const refNo = document.getElementById('in_refNo').value;
+            const dob = document.getElementById('in_dob').value;
+            const school = document.getElementById('in_schoolNameBn').value;
+
+            const qrData = `Ref: ${refNo}\nStudent: ${studentName}\nDOB: ${dob}\nSchool: ${school}\nVerification: Verified Certificate`;
+            const encodedData = encodeURIComponent(qrData);
+            
+            // Increased API resolution to 250x250 for crisp printing
+            const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodedData}`;
+            document.getElementById('qrCodeImg').src = qrUrl;
+        }
+
+        // Live Event Listeners
+        fields.forEach(field => {
+            const el = document.getElementById(`in_${field}`);
+            if(el) el.addEventListener('input', updateCertificate);
+        });
+
+        document.getElementById('in_gender').addEventListener('change', updateCertificate);
+        
+        // Action Buttons
+        document.getElementById('btnReset').addEventListener('click', () => {
+            fields.forEach(f => {
+                const el = document.getElementById(`in_${f}`);
+                if(el) el.value = '';
+            });
+            updateCertificate();
+        });
+        
+        document.getElementById('btnLoadSample').addEventListener('click', () => loadData(sampleData));
+
+        // Toggles
+        document.getElementById('chk_watermark').addEventListener('change', (e) => {
+            document.getElementById('watermarkLogo').style.display = e.target.checked ? 'block' : 'none';
+        });
+        
+        document.getElementById('chk_logos').addEventListener('change', (e) => {
+            const display = e.target.checked ? 'inline-block' : 'none';
+            document.getElementById('govtLogo').style.display = display;
+            document.getElementById('dpeLogo').style.display = display;
+        });
+
+        document.getElementById('chk_qrcode').addEventListener('change', (e) => {
+            document.getElementById('qrContainer').style.display = e.target.checked ? 'flex' : 'none';
+        });
+
+        // Mobile Controls
+        document.getElementById('mobileSidebarToggle').addEventListener('click', () => {
+            document.getElementById('sidebar').classList.toggle('-translate-x-full');
+        });
+        document.getElementById('closeSidebarBtn').addEventListener('click', () => {
+            document.getElementById('sidebar').classList.add('-translate-x-full');
+        });
+
+        window.onload = () => loadData(sampleData);
+    </script>
+</body>
+</html>
